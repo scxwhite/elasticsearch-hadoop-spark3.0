@@ -26,12 +26,12 @@ class ScalaValueReaderTest extends BaseValueReaderTest {
 
     override def createValueReader() = new ScalaValueReader()
 
-    override def checkNull(result: Object): Unit = { assertEquals(None, result)}
-    override def checkEmptyString(result: Object): Unit = { assertEquals(None, result)}
+    override def checkNull(result: Object): Unit = { assertEquals(null, result)}
+    override def checkEmptyString(result: Object): Unit = { assertEquals(null, result)}
     override def checkInteger(result: Object): Unit = { assertEquals(Int.MaxValue, result)}
     override def checkLong(result: Object): Unit = { assertEquals(Long.MaxValue, result)}
     override def checkDouble(result: Object): Unit = { assertEquals(Double.MaxValue, result)}
     override def checkFloat(result: Object): Unit = { assertEquals(Float.MaxValue.toString, result.toString())}
     override def checkBoolean(result: Object): Unit = { assertEquals(Boolean.box(true), result)}
-  
+
 }
