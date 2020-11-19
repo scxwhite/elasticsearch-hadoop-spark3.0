@@ -47,9 +47,9 @@ tasks.withType(ScalaCompile) { ScalaCompile task ->
 
 boolean localRepo = project.getProperties().containsKey("localRepo")
 
-// Gradle's java library plugin adds a variant to each project that offers the classes dir as an artifact that can be 
-// used in other projects instead of requiring a jar operation to happen. Kerberos depends on the spark integration to 
-// compile some code, but due to how the current spark compilation works it's likely that the classes directory in the 
+// Gradle's java library plugin adds a variant to each project that offers the classes dir as an artifact that can be
+// used in other projects instead of requiring a jar operation to happen. Kerberos depends on the spark integration to
+// compile some code, but due to how the current spark compilation works it's likely that the classes directory in the
 // spark projects do not exist anymore when the kerberos compilation happens during a distribution build.
 // TODO: Clean this up when we get to variants, they should persist their classes dirs in a sane way
 configurations {
@@ -69,7 +69,7 @@ dependencies {
     implementation('org.scala-lang:scala-library:2.11.12')
     implementation('org.scala-lang:scala-reflect:2.11.12')
     implementation(project(":elasticsearch-spark-20"))
-    
+
     compileOnly("com.fasterxml.jackson.module:jackson-module-scala_2.11:2.6.7.1")
     compileOnly("com.fasterxml.jackson.core:jackson-annotations:2.6.7")
     compileOnly("org.json4s:json4s-jackson_2.11:3.2.11")
@@ -97,26 +97,25 @@ dependencies {
 // Testing jars
 // =============================================================================
 
-// Disable the integration tests for Kerberos until we can find a solution to the failures due to + sign 
+// Disable the integration tests for Kerberos until we can find a solution to the failures due to + sign
 // in the file path on CI.
 boolean disableTests = true
 if (disableTests) {
-    // Disable the integration tests for Kerberos until we can find a solution to the failures due to + sign 
+    // Disable the integration tests for Kerberos until we can find a solution to the failures due to + sign
     // in the file path on CI.
-    Test integrationTest = project.tasks.findByName('integrationTest') as Test
-    integrationTest.setEnabled(false)
+
 } else if (!localRepo) {
     // We don't want to attempt compiling integration or test code when using a local repo because it depends on
     // the elasticsearch jar which will not be reachable.
     // Additionally, when using a local repo, the esCluster plugin is not applied, and thus, cannot be referenced in the
     // build script.
-    
+
     // Build uber storm jar for testing Storm remotely (es-hadoop + es-storm + qa tests)
     Jar qaKerberosStormJar = project.tasks.create('kerberosStormJar', Jar)
     qaKerberosStormJar.dependsOn(project(':elasticsearch-storm').tasks.getByName('jar'))
     qaKerberosStormJar.dependsOn(project(':elasticsearch-storm').tasks.getByName('itestJar'))
     qaKerberosStormJar.classifier = 'storm-testing'
-    
+
     // Add projects to the storm testing uber-jar
     [project, project(":elasticsearch-hadoop-mr"), project(":elasticsearch-storm")].forEach { proj ->
         qaKerberosStormJar.from(proj.sourceSets.test.output)
@@ -126,14 +125,14 @@ if (disableTests) {
     qaKerberosStormJar.from {
         configurations.stormDeps.collect { dep -> zipTree(dep) }
     }
-    
+
     // =============================================================================
     // Kerberos configuration
     // =============================================================================
-    
+
     String realm = '@BUILD.ELASTIC.CO'
     String hostPart = '/build.elastic.co'
-    
+
     String esPrincipal = 'HTTP' + hostPart
     String clientPrincipal = 'client' + hostPart
     String namenodePrincipal = 'nn' + hostPart
@@ -143,15 +142,15 @@ if (disableTests) {
     String historyServerPrincipal = 'jhs' + hostPart
     String mapredPrincipal = 'mapred' + hostPart
     String hivePrincipalName = 'hive' + hostPart
-    
+
     String esKeytabName = 'es.keytab'
     String clientKeytabName = 'client.keytab'
     String hadoopKeytabName = 'hadoop.keytab'
     String hiveKeytabName = 'hive.keytab'
-    
+
     Map users = ["client":"password", "gmarx":"swordfish"]
     Map<String, String> keytabUsers = [:]
-    
+
     keytabUsers.put(esPrincipal, esKeytabName)
     keytabUsers.put(clientPrincipal, clientKeytabName)
     keytabUsers.put('HTTP/hadoop.build.elastic.co', hadoopKeytabName)
@@ -162,7 +161,7 @@ if (disableTests) {
     keytabUsers.put(historyServerPrincipal, hadoopKeytabName)
     keytabUsers.put(mapredPrincipal, hadoopKeytabName)
     keytabUsers.put(hivePrincipalName, hiveKeytabName)
-    
+
     // Configure MiniKDC
     AntFixture kdcFixture = project.tasks.create('kdcFixture', AntFixture) {
         dependsOn project.configurations.kdcFixture
@@ -173,20 +172,20 @@ if (disableTests) {
             // it's ready, so we can just wait for the file to exist
             return fixture.portsFile.exists()
         }
-    
+
         final List<String> kdcFixtureArgs = []
-    
+
         // Add provisioning lines first for sys properties
         users.forEach { k, v -> kdcFixtureArgs.add("-Des.fixture.kdc.user.${k}.pwd=${v}") }
         keytabUsers.forEach { k, v -> kdcFixtureArgs.add("-Des.fixture.kdc.user.${k}.keytab=${v}") }
-    
+
         // Common options
         kdcFixtureArgs.add('org.elasticsearch.hadoop.test.fixture.minikdc.MiniKdcFixture')
         kdcFixtureArgs.add(baseDir.toString())
-    
+
         args kdcFixtureArgs.toArray()
     }
-    
+
     // KDC Fixture artifacts
     java.nio.file.Path fixtureDir = project.buildDir.toPath().resolve("fixtures").resolve("kdcFixture")
     java.nio.file.Path krb5Conf = fixtureDir.resolve("krb5.conf")
@@ -194,11 +193,11 @@ if (disableTests) {
     java.nio.file.Path clientKeytab = fixtureDir.resolve(clientKeytabName)
     java.nio.file.Path hadoopKeytab = fixtureDir.resolve(hadoopKeytabName)
     java.nio.file.Path hiveKeytab = fixtureDir.resolve(hiveKeytabName)
-    
+
     // =============================================================================
     // Elasticsearch cluster configuration
     // =============================================================================
-    
+
     // Configure ES with Kerberos Auth
     testClusters.integTest {
         // This may be needed if we ever run against java 9:
@@ -245,7 +244,7 @@ if (disableTests) {
     integrationTest.systemProperty("es.net.http.auth.pass", "x-pack-test-password")
     integrationTest.systemProperty("tests.hive.principal", "${hivePrincipalName}${realm}")
     integrationTest.systemProperty("tests.hive.keytab", hiveKeytab.toString())
-    
+
     // Fixtures will be depending on the jar and test jar artifacts
     def jar = project.tasks.getByName('jar') as org.gradle.jvm.tasks.Jar
     def kerberosItestJar = project.tasks.findByName('itestJar') as Jar
@@ -259,7 +258,7 @@ if (disableTests) {
     // Need these for SSL items, test data, and scripts
     File resourceDir = project.sourceSets.main.resources.getSrcDirs().head()
     File mrItestResourceDir = project(":elasticsearch-hadoop-mr").sourceSets.itest.resources.getSrcDirs().head()
-    
+
     Task setupUsers = project.tasks.create("setupUsers", DefaultTestClustersTask) {
         useCluster(testClusters.integTest)
         doLast {
@@ -277,11 +276,11 @@ if (disableTests) {
         }
     }
     integrationTest.dependsOn(setupUsers)
-    
+
     // =============================================================================
     // Hadoop test cluster configuration
     // =============================================================================
-    
+
     // Project instance available implicitly
     HadoopClusterConfiguration config = project.hadoop.cluster("hadoopFixture") { HadoopClusterConfiguration config ->
         // Hadoop cluster depends on KDC Fixture being up and running
@@ -402,7 +401,7 @@ if (disableTests) {
         ])
         args = ['-mkdir', '-p', '/tmp/hadoop-yarn/staging/history']
     }
-    
+
     HadoopMRJob prepareTmp = config.service('hadoop').role('datanode').createClusterTask('prepareTmp', HadoopMRJob.class) {
         clusterConfiguration = config
         // Run on namenode since the gateway is not yet set up
@@ -419,7 +418,7 @@ if (disableTests) {
     }
     config.service('hadoop').role('historyserver').addDependency(prepareTmp)
     config.service('hive').addDependency(prepareTmp)
-    
+
     // We must create the data directory before copying test data. DfsCopy task would normally do this
     // automatically, but we have to wrap the fs shell for Kerberos.
     HadoopMRJob createDataDir = config.createClusterTask('createDataDir', HadoopMRJob.class) {
@@ -435,7 +434,7 @@ if (disableTests) {
         ])
         args = ['-mkdir', '-p', '/data/artists/']
     }
-    
+
     // Copy the test data to HDFS using the SecureFsShell instead of dfs copy. We could use the
     // DfsCopy task, but with Kerberos, we would have to kinit before running it. Instead we wrap.
     HadoopMRJob copyData = config.createClusterTask('copyData', HadoopMRJob.class) {
@@ -450,11 +449,11 @@ if (disableTests) {
         ])
         args = ['-copyFromLocal', project.file(new File(mrItestResourceDir, 'artists.dat')), "/data/artists/artists.dat"]
     }
-    
+
     // =============================================================================
     // Map Reduce Jobs
     // =============================================================================
-    
+
     // Run the MR job to load data to ES. Ensure Kerberos settings are available.
     HadoopMRJob mrLoadData = config.createClusterTask('mrLoadData', HadoopMRJob.class) {
         clusterConfiguration = config
@@ -481,7 +480,7 @@ if (disableTests) {
         args = ['/data/artists/artists.dat']
     }
     integrationTest.dependsOn(mrLoadData)
-    
+
     // Run the MR job to read data out of ES. Ensure Kerberos settings are available.
     HadoopMRJob mrReadData = config.createClusterTask('mrReadData', HadoopMRJob.class) {
         clusterConfiguration = config
@@ -507,11 +506,11 @@ if (disableTests) {
         args = ['/data/output/mr']
     }
     integrationTest.dependsOn(mrReadData)
-    
+
     // =============================================================================
     // Spark Jobs
     // =============================================================================
-    
+
     // Run the Spark job to load data to ES. Ensure Kerberos settings are available.
     SparkApp sparkLoadData = config.createClusterTask('sparkLoadData', SparkApp.class) {
         clusterConfiguration = config
@@ -539,7 +538,7 @@ if (disableTests) {
         args = ['/data/artists/artists.dat']
     }
     integrationTest.dependsOn(sparkLoadData)
-    
+
     // Run the Spark job to load data to ES. Ensure Kerberos settings are available.
     SparkApp sparkReadData = config.createClusterTask('sparkReadData', SparkApp.class) {
         clusterConfiguration = config
@@ -566,11 +565,11 @@ if (disableTests) {
         args = ['/data/output/spark']
     }
     integrationTest.dependsOn(sparkReadData)
-    
+
     // =============================================================================
     // Hive Jobs
     // =============================================================================
-    
+
     // Replace the regular beeline script with our own shimmed one. All we do is perform a keytab login and
     // delegate on regularly. This is easier than re-implementing most of beeline.
     Copy patchBeeline = config.createClusterTask('patchBeeline', Copy.class) {
@@ -584,7 +583,7 @@ if (disableTests) {
         into lazyEvalBeelineScript
         setDuplicatesStrategy(DuplicatesStrategy.INCLUDE)
     }
-    
+
     HiveBeeline hiveLoadData = config.createClusterTask('hiveLoadData', HiveBeeline.class) {
         clusterConfiguration = config
         useCluster(testClusters.integTest)
@@ -601,7 +600,7 @@ if (disableTests) {
         ])
     }
     integrationTest.dependsOn(hiveLoadData)
-    
+
     HiveBeeline hiveReadData = config.createClusterTask('hiveReadData', HiveBeeline.class) {
         clusterConfiguration = config
         useCluster(testClusters.integTest)
@@ -618,11 +617,11 @@ if (disableTests) {
         ])
     }
     integrationTest.dependsOn(hiveReadData)
-    
+
     // =============================================================================
     // Pig Jobs
     // =============================================================================
-    
+
     PigScript pigLoadData = config.createClusterTask('pigLoadData', PigScript.class) {
         clusterConfiguration = config
         useCluster(testClusters.integTest)
@@ -634,7 +633,7 @@ if (disableTests) {
         ])
     }
     integrationTest.dependsOn(pigLoadData)
-    
+
     PigScript pigReadData = config.createClusterTask('pigReadData', PigScript.class) {
         clusterConfiguration = config
         useCluster(testClusters.integTest)
@@ -646,11 +645,11 @@ if (disableTests) {
         ])
     }
     integrationTest.dependsOn(pigReadData)
-    
+
     // =============================================================================
     // Copy job outputs
     // =============================================================================
-    
+
     File outputDataDir = project.file(new File(project.buildDir, 'data'))
     Task createOutputDataDir = project.tasks.create("createOutputDataDir") {
         doLast {
@@ -661,14 +660,14 @@ if (disableTests) {
             outputDataDir.mkdirs()
         }
     }
-    
+
     Map<String, Task> readJobs = [
             'mr': mrReadData,
             'spark': sparkReadData,
             'hive': hiveReadData,
             'pig': pigReadData
     ]
-    
+
     readJobs.forEach { integrationName, integrationReadTask ->
         // Copy the test data to HDFS using the SecureFsShell instead of dfs copy. We could use the
         // DfsCopy task, but with Kerberos, we would have to kinit before running it. Instead we wrap.

@@ -11,7 +11,6 @@ String minimumGradleVersion = file('src/main/resources/minimumGradleVersion').te
 if (GradleVersion.current() < GradleVersion.version(minimumGradleVersion)) {
     throw new GradleException("Gradle ${minimumGradleVersion}+ is required to build es-hadoop")
 }
-
 if (JavaVersion.current() < JavaVersion.VERSION_11) {
     throw new GradleException('At least Java 11 is required to use elasticsearch gradle tools')
 }

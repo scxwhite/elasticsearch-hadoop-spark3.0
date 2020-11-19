@@ -1,13 +1,8 @@
 package org.elasticsearch.hadoop.gradle.fixture
+//import org.elasticsearch.gradle.testclusters.RestTestRunnerTask
 
-import org.elasticsearch.gradle.testclusters.ElasticsearchCluster
-import org.elasticsearch.gradle.testclusters.RestTestRunnerTask
-import org.elasticsearch.gradle.testclusters.TestClustersPlugin
-import org.elasticsearch.gradle.testclusters.TestDistribution
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.process.CommandLineArgumentProvider
 
 /**
  * Plugin that adds the ability to stand up an Elasticsearch cluster for tests.
@@ -23,23 +18,23 @@ class ElasticsearchFixturePlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.pluginManager.apply(TestClustersPlugin)
+      /*  project.pluginManager.apply(TestClustersPlugin)
         def version = project.hasProperty("es.version") ? project.getProperty("es.version") : project.elasticsearchVersion
 
         // Optionally allow user to disable the fixture
         def useFixture = Boolean.parseBoolean(project.findProperty("tests.fixture.es.enable") ?: "true")
 
-        def integrationTestTask = project.tasks.getByName("integrationTest") as RestTestRunnerTask
+        //def integrationTestTask = project.tasks.getByName("integrationTest") as RestTestRunnerTask
         if (useFixture) {
             // Depends on project already containing an "integrationTest"
             // task, as well as javaHome+runtimeJavaHome configured
-            createClusterFor(integrationTestTask, project, version)
+         //   createClusterFor(integrationTestTask, project, version)
         } else {
             integrationTestTask.systemProperty("test.disable.local.es", "true")
-        }
+        }*/
     }
 
-    private static void createClusterFor(RestTestRunnerTask integrationTest, Project project, String version) {
+   /* private static void createClusterFor(RestTestRunnerTask integrationTest, Project project, String version) {
         def clustersContainer = project.extensions.getByName(TestClustersPlugin.EXTENSION_NAME) as NamedDomainObjectContainer<ElasticsearchCluster>
         def integTestCluster = clustersContainer.create("integTest") { ElasticsearchCluster cluster ->
             cluster.version = version
@@ -90,5 +85,5 @@ class ElasticsearchFixturePlugin implements Plugin<Project> {
         if (script != null) {
             integTestCluster.extraConfigFile("script", script)
         }
-    }
+    }*/
 }

@@ -5,7 +5,6 @@ import org.elasticsearch.gradle.info.BuildParams
 import org.elasticsearch.gradle.precommit.DependencyLicensesTask
 import org.elasticsearch.gradle.precommit.LicenseHeadersTask
 import org.elasticsearch.gradle.precommit.UpdateShasTask
-import org.elasticsearch.gradle.testclusters.RestTestRunnerTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -487,7 +486,7 @@ class BuildPlugin implements Plugin<Project>  {
                 itestJar.from(project.sourceSets.itest.output)
             }
 
-            Test integrationTest = project.tasks.create('integrationTest', RestTestRunnerTask.class)
+          /* Test integrationTest = project.tasks.create('integrationTest', RestTestRunnerTask.class)
             integrationTest.dependsOn(itestJar)
 
             itestJar.configure { Jar jar ->
@@ -498,7 +497,7 @@ class BuildPlugin implements Plugin<Project>  {
 
             integrationTest.testClassesDirs = project.sourceSets.itest.output.classesDirs
             integrationTest.classpath = project.sourceSets.itest.runtimeClasspath
-            integrationTest.excludes = ["**/Abstract*.class"]
+            integrationTest.excludes = ["/Abstract*.class"]
 
             integrationTest.ignoreFailures = false
 
@@ -518,7 +517,7 @@ class BuildPlugin implements Plugin<Project>  {
                 maxGranularity 2
             }
 
-            integrationTest.reports.html.enabled = false
+            integrationTest.reports.html.enabled = false*/
 
             // Only add cluster settings if it's not the root project
             project.logger.info "Configuring ${project.name} integrationTest task to use ES Fixture"

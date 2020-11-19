@@ -45,4 +45,4 @@ jar {
     }
 }
 
-tasks.getByName('integrationTest').enabled = false
+//tasks.getByName('integrationTest').enabled = false
